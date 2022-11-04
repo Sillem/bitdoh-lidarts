@@ -5,6 +5,7 @@ import secrets
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr, AbstractConcreteBase
 from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String
 
 
 # Define models
@@ -50,6 +51,7 @@ class User(db.Model, UserMixin):
     backer_until = db.Column(db.DateTime, default=None)
     webcam_settings = relationship("WebcamSettings", uselist=False, back_populates="user_object")
     api_key = db.Column(db.String(16), default=None)
+    fs_uniquifier = Column(String(255), unique=True, nullable=False)
 
     requested_friend_reqs = db.relationship(
         'FriendshipRequest',

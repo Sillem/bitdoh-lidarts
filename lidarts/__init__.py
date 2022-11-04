@@ -24,7 +24,7 @@ from flask_mail import Mail
 from flask_moment import Moment
 from flask_babelex import Babel
 from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
-from flask._compat import text_type
+#from flask._compat import text_type
 from flask.json import JSONEncoder as BaseEncoder
 import flask_monitoringdashboard as dashboard
 from flask_login import current_user
@@ -86,6 +86,10 @@ class ReverseProxied(object):
 def format_datetime(value):
     return babel.dates.format_datetime(value, "dd.MM.y HH:mm")
 
+def uia_username_mapper(identity):
+    # we allow pretty much anything - but we bleach it.
+    return identity
+
 
 def create_app(test_config=None):
     # Create Flask app with a default config
@@ -114,10 +118,10 @@ def create_app(test_config=None):
     mail.init_app(app)
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
     security.init_app(app, user_datastore,
-                      login_form=ExtendedLoginForm,
-                      register_form=ExtendedRegisterForm,
-                      change_password_form=ExtendedChangePasswordForm,
-                      reset_password_form=ExtendedResetPasswordForm)
+                      {"login_form": {"mapper": uia_username_mapper, "case_sensetive":True},
+                      "register_form":{"mapper": uia_username_mapper, "case_sensetive":True},
+                      "change_password_form":{"mapper": uia_username_mapper, "case_sensetive":True},
+                      "reset_password_form":{"mapper": uia_username_mapper, "case_sensetive":True}})
 
     origins = app.config['CORS_ALLOWED_ORIGINS'] if 'CORS_ALLOWED_ORIGINS' in app.config else '*'
     
@@ -154,7 +158,7 @@ def create_app(test_config=None):
     app.task_queue = rq.Queue('lidarts-tasks', connection=app.redis)
 
     # Flask-Security mails need to be sent in background
-    @security.send_mail_task 
+   # @security.send_mail_task
     def delay_flask_security_mail(msg):
         app.task_queue.enqueue('lidarts.tasks.send_mail', msg)
 
